@@ -399,7 +399,6 @@ process_device_select(struct aiomixer *aio, unsigned int num_devices)
 	while ((ch = getch()) != ERR) {
 		switch (ch) {
 		case '\n':
-			fprintf(stderr, "opening\n");
 			(void)snprintf(device_path, sizeof(device_path),
 			    "/dev/mixer%d", selected_device);
 			open_device(aio, device_path);
