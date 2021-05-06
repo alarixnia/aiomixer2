@@ -42,7 +42,7 @@
 
 static void process_device_select(struct aiomixer *, unsigned int);
 static void open_device(struct aiomixer *, const char *);
-static void usage(void);
+static void __dead usage(void);
 static int adjust_level(int, int);
 static int select_class(struct aiomixer *, unsigned int);
 static int select_control(struct aiomixer *, unsigned int);
@@ -52,7 +52,7 @@ static void step_up(struct aiomixer *);
 static void step_down(struct aiomixer *);
 static int read_key(struct aiomixer *, int);
 
-static void
+static void __dead
 usage(void)
 {
 	fputs("aiomixer [-u] [-d device]\n", stderr);
