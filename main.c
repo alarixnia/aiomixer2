@@ -31,6 +31,7 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <signal.h>
 #include <paths.h>
 #include <curses.h>
 #include <stdlib.h>
@@ -476,6 +477,13 @@ open_device(struct aiomixer *aio, const char *device)
 	}
 }
 
+static void
+on_signal(int dummy __unused)
+{
+	endwin();
+	exit(0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -511,6 +519,10 @@ main(int argc, char **argv)
 
 	if (initscr() == NULL)
 		err(EXIT_FAILURE, "can't initialize curses");
+
+	(void)signal(SIGHUP, on_signal);
+	(void)signal(SIGINT, on_signal);
+	(void)signal(SIGTERM, on_signal);
 
 	curs_set(0);
 	keypad(stdscr, TRUE);
