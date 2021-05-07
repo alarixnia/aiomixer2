@@ -69,6 +69,7 @@ select_class(struct aiomixer *aio, unsigned int n)
 		return -1;
 
 	class = &aio->classes[n];
+	aio->widgets_resized = true;
 	aio->class_scroll_y = 0;
 	aio->curcontrol = 0;
 	aio->curclass = n;
@@ -101,12 +102,16 @@ select_control(struct aiomixer *aio, unsigned int n)
 	control->setindex = 0;
 	draw_control(aio, control, true);
 
-	if (aio->class_scroll_y > control->widget_y)
+	if (aio->class_scroll_y > control->widget_y) {
 		aio->class_scroll_y = control->widget_y;
+		aio->widgets_resized = true;
+	}
 
 	if ((control->widget_y + control->height) >
-	    ((getmaxy(stdscr) - 4) + aio->class_scroll_y))
+	    ((getmaxy(stdscr) - 4) + aio->class_scroll_y)) {
 		aio->class_scroll_y = control->widget_y;
+		aio->widgets_resized = true;
+	}
 	return 0;
 }
 
@@ -273,7 +278,7 @@ read_key(struct aiomixer *aio, int ch)
 	switch (ch) {
 	case KEY_RESIZE:
 		class = &aio->classes[aio->curclass];
-		create_widgets(aio);
+		resize_widgets(aio);
 		draw_header(aio);
 		draw_classbar(aio);
 		for (i = 0; i < class->numcontrols; ++i) {

@@ -66,6 +66,8 @@ struct aiomixer {
 	unsigned int curcontrol;
 	bool channels_unlocked;
 	int class_scroll_y;
+	int last_max_x;
+	bool widgets_resized;
 	WINDOW *header;
 	WINDOW *classbar;
 };

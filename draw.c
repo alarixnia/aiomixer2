@@ -150,13 +150,24 @@ draw_control(struct aiomixer *aio,
 void
 draw_screen(struct aiomixer *aio)
 {
+	int i, max_y;
+
+	/* Clear any leftovers if the screen changed. */
+	if (aio->widgets_resized) {
+		aio->widgets_resized = false;
+		max_y = getmaxy(stdscr);
+		for (i = 3; i < max_y; ++i) {
+			mvprintw(i, 0, "\n");
+		}
+	}
+
 	wnoutrefresh(stdscr);
 	wnoutrefresh(aio->header);
 	wnoutrefresh(aio->classbar);
 	pnoutrefresh(aio->classes[aio->curclass].widgetpad,
 	    aio->class_scroll_y, 0,
 	    3, 0,
-	    getmaxy(stdscr) - 3, getmaxx(stdscr));
+	    1 + aio->classes[aio->curclass].height, getmaxx(stdscr));
 	doupdate();
 }
 
@@ -353,7 +364,8 @@ create_widgets(struct aiomixer *aio)
 			control = &class->controls[j];
 			switch (control->info.type) {
 			case AUDIO_MIXER_VALUE:
-				control->height = 2 + control->info.un.v.num_channels;
+				control->height = 2 +
+				    control->info.un.v.num_channels;
 				break;
 			case AUDIO_MIXER_ENUM:
 			case AUDIO_MIXER_SET:
@@ -368,7 +380,10 @@ create_widgets(struct aiomixer *aio)
 			control->widget_y = class->height;
 			class->height += control->height;
 		}
+		wresize(class->widgetpad, class->height, getmaxx(stdscr));
 	}
+
+	aio->last_max_x = getmaxx(stdscr);
 }
 
 void
@@ -377,18 +392,25 @@ resize_widgets(struct aiomixer *aio)
 	size_t i, j;
 	struct aiomixer_class *class;
 	struct aiomixer_control *control;
+	int max_x;
 
-	wresize(aio->header, 1, getmaxx(stdscr));
-	wresize(aio->classbar, 2, getmaxx(stdscr));
+	max_x = getmaxx(stdscr);
 
-	for (i = 0; i < aio->numclasses; ++i) {
-		class = &aio->classes[i];
-		wresize(class->widgetpad,
-		    4 * __arraycount(class->controls), getmaxx(stdscr));
-		for (j = 0; j < class->numcontrols; ++j) {
-			control = &class->controls[j];
-			wresize(control->widgetpad,
-			    control->height, getmaxx(stdscr));
+	if (aio->last_max_x != max_x) {
+		aio->last_max_x = max_x;
+		wresize(aio->header, 1, max_x);
+		wresize(aio->classbar, 2, max_x);
+
+		for (i = 0; i < aio->numclasses; ++i) {
+			class = &aio->classes[i];
+			wresize(class->widgetpad, class->height, max_x);
+			for (j = 0; j < class->numcontrols; ++j) {
+				control = &class->controls[j];
+				wresize(control->widgetpad,
+				    control->height, max_x);
+			}
 		}
 	}
+
+	aio->widgets_resized = true;
 }
