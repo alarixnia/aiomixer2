@@ -311,6 +311,7 @@ read_key(struct aiomixer *aio, int ch)
 			if (aio->curcontrol == 0) {
 				class = &aio->classes[aio->curclass];
 				control = &class->controls[aio->curcontrol];
+				control->setindex = -1;
 				aio->state = STATE_CLASS_SELECT;
 				draw_control(aio, control, false);
 			} else {
