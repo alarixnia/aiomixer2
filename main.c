@@ -483,7 +483,7 @@ open_device(struct aiomixer *aio, const char *device)
 }
 
 static void
-on_signal(int dummy __unused)
+on_signal(int dummy)
 {
 	endwin();
 	exit(0);
