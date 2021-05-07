@@ -105,7 +105,7 @@ select_control(struct aiomixer *aio, unsigned int n)
 		aio->class_scroll_y = control->widget_y;
 
 	if ((control->widget_y + control->height) >
-	    ((getmaxy(stdscr) - 4) - aio->class_scroll_y))
+	    ((getmaxy(stdscr) - 4) + aio->class_scroll_y))
 		aio->class_scroll_y = control->widget_y;
 	return 0;
 }
