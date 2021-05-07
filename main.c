@@ -100,6 +100,13 @@ select_control(struct aiomixer *aio, unsigned int n)
 	aio->curcontrol = n;
 	control->setindex = 0;
 	draw_control(aio, control, true);
+
+	if (aio->class_scroll_y > control->widget_y)
+		aio->class_scroll_y = control->widget_y;
+
+	if ((control->widget_y + control->height) >
+	    ((getmaxy(stdscr) - 4) - aio->class_scroll_y))
+		aio->class_scroll_y = control->widget_y;
 	return 0;
 }
 
@@ -233,8 +240,6 @@ step_up(struct aiomixer *aio)
 		draw_control(aio, control, true);
 		return;
 	}
-	if (aio->class_scroll_y >= control->height)
-		aio->class_scroll_y -= control->height;
 	select_control(aio, aio->curcontrol - 1);
 }
 
@@ -243,7 +248,6 @@ step_down(struct aiomixer *aio)
 {
 	struct aiomixer_class *class;
 	struct aiomixer_control *control;
-	unsigned new_control_idx;
 
 	class = &aio->classes[aio->curclass];
 	control = &class->controls[aio->curcontrol];
@@ -255,13 +259,8 @@ step_down(struct aiomixer *aio)
 		draw_control(aio, control, true);
 		return;
 	}
-	new_control_idx = (aio->curcontrol + 1) % class->numcontrols;
-	if ((3 + class->height) > getmaxy(stdscr) &&
-	    aio->curcontrol != (class->numcontrols - 1))
-		aio->class_scroll_y += control->height;
-	if (new_control_idx == 0)
-		aio->class_scroll_y = 0;
-	select_control(aio, new_control_idx);
+
+	select_control(aio, (aio->curcontrol + 1) % class->numcontrols);
 }
 
 static int
