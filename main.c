@@ -531,9 +531,8 @@ main(int argc, char **argv)
 
 	if (has_colors()) {
 		start_color();
-		use_default_colors();
-		init_pair(COLOR_CONTROL_SELECTED, COLOR_BLUE, -1);
-		init_pair(COLOR_LEVELS, COLOR_GREEN, -1);
+		init_pair(COLOR_CONTROL_SELECTED, COLOR_BLUE, COLOR_BLACK);
+		init_pair(COLOR_LEVELS, COLOR_GREEN, COLOR_BLACK);
 		init_pair(COLOR_SET_SELECTED, COLOR_BLACK, COLOR_GREEN);
 		init_pair(COLOR_ENUM_ON, COLOR_WHITE, COLOR_RED);
 		init_pair(COLOR_ENUM_OFF, COLOR_WHITE, COLOR_BLUE);
