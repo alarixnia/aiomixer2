@@ -36,11 +36,37 @@
 #include <stdlib.h>
 #include "draw.h"
 
+static void bold_on(WINDOW *);
+static void bold_off(WINDOW *);
 static int get_enum_color(const char *);
 static void draw_enum(struct aiomixer_control *, int, bool);
 static void draw_set(struct aiomixer_control *, int);
 static void draw_levels(struct aiomixer_control *,
     const struct mixer_level *, bool, bool);
+
+static void
+bold_on(WINDOW *w)
+{
+	/*
+	 * Some (XXX: which?) legacy terminals do not support a Bold
+	 * attribute.  In this case, we fall back to standout.
+	 */
+	if (termattrs() & A_BOLD)
+		wattron(w, A_BOLD);
+	else
+		wattron(w, A_STANDOUT);
+}
+
+static void
+bold_off(WINDOW *w)
+{
+	chtype attrs = getattrs(w);
+
+	if (attrs & A_BOLD)
+		wattroff(w, A_BOLD);
+	if (attrs & A_STANDOUT)
+		wattroff(w, A_STANDOUT);
+}
 
 void
 draw_mixer_select(unsigned int num_mixers, unsigned int selected_mixer)
@@ -64,7 +90,7 @@ draw_mixer_select(unsigned int num_mixers, unsigned int selected_mixer)
 		}
 		close(fd);
 		if (selected_mixer == i) {
-			attron(A_BOLD);
+			bold_on(stdscr);
 			addstr("[*] ");
 		} else {
 			addstr("[ ] ");
@@ -72,7 +98,7 @@ draw_mixer_select(unsigned int num_mixers, unsigned int selected_mixer)
 		printw("%s: %s %s %s\n", mixer_path,
 		    dev.name, dev.version, dev.config);
 		if (selected_mixer == i)
-			attroff(A_BOLD);
+			bold_off(stdscr);
 	}
 }
 
@@ -92,7 +118,7 @@ draw_control(struct aiomixer *aio,
 
 	wclear(control->widgetpad);
 	if (selected) {
-		wattron(control->widgetpad, A_BOLD);
+		bold_on(control->widgetpad);
 		if (has_colors()) {
 			wattron(control->widgetpad,
 			    COLOR_PAIR(COLOR_CONTROL_SELECTED));
@@ -105,7 +131,7 @@ draw_control(struct aiomixer *aio,
 	}
 	wprintw(control->widgetpad, "%s\n", control->info.label.name);
 	if (selected)
-		wattroff(control->widgetpad, A_BOLD);
+		bold_off(control->widgetpad);
 
 	switch (value.type) {
 	case AUDIO_MIXER_ENUM:
@@ -157,7 +183,7 @@ draw_enum(struct aiomixer_control *control, int ord, bool selected)
 	for (i = 0; i < control->info.un.e.num_mem; ++i) {
 		e = &control->info.un.e;
 		if (ord == e->member[i].ord && selected)
-			wattron(control->widgetpad, A_BOLD);
+			bold_on(control->widgetpad);
 		waddch(control->widgetpad, '[');
 		if (ord == e->member[i].ord) {
 			if (has_colors()) {
@@ -177,7 +203,7 @@ draw_enum(struct aiomixer_control *control, int ord, bool selected)
 		}
 		waddch(control->widgetpad, ']');
 		if (ord == e->member[i].ord && selected)
-			wattroff(control->widgetpad, A_BOLD);
+			bold_off(control->widgetpad);
 		if (i != (e->num_mem - 1))
 			waddstr(control->widgetpad, ", ");
 	}
@@ -206,13 +232,13 @@ draw_set(struct aiomixer_control *control, int mask)
 		}
 		waddstr(control->widgetpad, "] ");
 		if (control->setindex == i) {
-			wattron(control->widgetpad, A_BOLD);
+			bold_on(control->widgetpad);
 			waddch(control->widgetpad, '*');
 		}
 		wprintw(control->widgetpad, "%s",
 		    control->info.un.s.member[i].label.name);
 		if (control->setindex == i)
-			wattroff(control->widgetpad, A_BOLD);
+			bold_off(control->widgetpad);
 		if (i != (control->info.un.s.num_mem - 1))
 			waddstr(control->widgetpad, ", ");
 	}
@@ -228,7 +254,7 @@ draw_levels(struct aiomixer_control *control,
 	for (i = 0; i < control->info.un.v.num_channels; ++i) {
 		if ((selected && !channels_unlocked) ||
 		    (control->setindex == i && channels_unlocked)) {
-			wattron(control->widgetpad, A_BOLD);
+			bold_on(control->widgetpad);
 		}
 		wprintw(control->widgetpad, "[%3u/%3u ",
 		    levels->level[i], AUDIO_MAX_GAIN);
@@ -250,7 +276,7 @@ draw_levels(struct aiomixer_control *control,
 		wprintw(control->widgetpad, "]\n");
 		if ((selected && !channels_unlocked) ||
 		    (control->setindex == i && channels_unlocked)) {
-			wattroff(control->widgetpad, A_BOLD);
+			bold_off(control->widgetpad);
 		}
 	}
 }
@@ -264,7 +290,7 @@ draw_classbar(struct aiomixer *aio)
 
 	for (i = 0; i < aio->numclasses; ++i) {
 		if (aio->curclass == i)
-			wattron(aio->classbar, A_BOLD);
+			bold_on(aio->classbar);
 		wprintw(aio->classbar, "[%u:", i + 1);
 		if (aio->curclass == i) {
 			if (has_colors()) {
@@ -279,7 +305,7 @@ draw_classbar(struct aiomixer *aio)
 		}
 		waddstr(aio->classbar, aio->classes[i].name);
 		if (aio->curclass == i)
-			wattroff(aio->classbar, A_BOLD);
+			bold_off(aio->classbar);
 		waddstr(aio->classbar, "] ");
 	}
 
